@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cartoon Twin AI</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle,#ff9ad5,#ff4fa3,#ff85c1);
+  overflow: hidden;
+  color: white;
+}
+
+/* 🎥 camera */
+#camera {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  object-fit: cover;
+  border-right: 4px solid white;
+}
+
+/* ✨ FAKE SCAN OVERLAY */
+#scanOverlay {
+  position: absolute;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* moving scan line */
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right,#ff4fa3,#ffffff,#ff4fa3);
+  box-shadow: 0 0 20px #ff69b4;
+  animation: moveScan 2s linear infinite;
+}
+
+@keyframes moveScan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* glow grid effect */
+.grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* 🎀 result */
+#result {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* character box */
+#charBox {
+  width: 260px;
+  height: 260px;
+  border-radius: 25px;
+  border: 3px solid #fff;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 20px #ff69b4;
+}
+
+#charBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#name {
+  margin-top: 15px;
+  font-size: 24px;
+}
+
+#comment {
+  margin-top: 15px;
+  font-size: 20px;
+  background: rgba(255,255,255,0.85);
+  color: black;
+  padding: 10px 20px;
+  border-radius: 20px;
+}
+
+button {
+  margin-top: 25px;
+  padding: 15px 30px;
+  font-size: 18px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(45deg,#ff4fa3,#ff9ad5);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 0 15px #ff69b4;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<video id="camera" autoplay muted></video>
+
+<!-- ✨ fake scan -->
+<div id="scanOverlay">
+  <div class="grid"></div>
+  <div class="scan-line"></div>
+</div>
+
+<div id="result">
+  <h1>🎀 Cartoon Twin AI</h1>
+  <div id="charBox">Scanning... 👀</div>
+  <h2 id="name">Analyzing your face...</h2>
+  <p id="comment"></p>
+  <button onclick="restart()">🔄 Start Again</button>
+</div>
+
+<script>
+const video = document.getElementById("camera");
+const charBox = document.getElementById("charBox");
+const nameText = document.getElementById("name");
+const commentText = document.getElementById("comment");
+const button = document.querySelector("button");
+const scanOverlay = document.getElementById("scanOverlay");
+
+// 🎥 start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+  video.srcObject = stream;
+  startScan();
+})
+.catch(() => alert("Camera access denied 😢"));
+
+// 🎭 characters
+const chars = [
+  { name: "Conan 🕵️", img: "images/conan.png", comment: "Smart detective energy 🔍" },
+  { name: "Tom & Jerry 🐱🐭", img: "images/tom_jerry.png", comment: "Chaos duo 😂🔥" },
+  { name: "Pikachu ⚡", img: "images/pikachu.png", comment: "Electric cuteness ⚡" },
+  { name: "Hello Kitty 🎀", img: "images/hello_kitty.png", comment: "Soft cute vibes 💖" },
+  { name: "SpongeBob 🍍", img: "images/spongebob.png", comment: "Funny and energetic 😂" },
+  { name: "Mickey Mouse 🐭", img: "images/mickey.png", comment: "Classic leader 🏆" },
+  { name: "Dora 🧭", img: "images/dora.png", comment: "Explorer mindset 🌍" },
+  { name: "Naruto 🥷", img: "images/naruto.png", comment: "Never give up 💪🔥" },
+  { name: "Luffy 🏴‍☠️", img: "images/luffy.png", comment: "Adventure spirit ⚓" },
+  { name: "Elsa ❄️", img: "images/elsa.png", comment: "Cool and powerful ❄️✨" }
+];
+
+let interval;
+
+// ⏱ start fake scan (2 seconds)
+function startScan() {
+  scanOverlay.style.display = "block";
+  nameText.innerText = "Scanning your face... 👀";
+
+  setTimeout(() => {
+    startAnimation();
+  }, 2000);
+}
+
+// 🎰 fast shuffle
+function startAnimation() {
+  let count = 0;
+
+  interval = setInterval(() => {
+    let random = Math.floor(Math.random() * chars.length);
+    let c = chars[random];
+
+    charBox.innerHTML = `<img src="${c.img}">`;
+
+    count++;
+
+    if (count > 25) {
+      clearInterval(interval);
+      showResult();
+    }
+  }, 70);
+}
+
+// 🎯 result
+function showResult() {
+  scanOverlay.style.display = "none";
+
+  let random = Math.floor(Math.random() * chars.length);
+  let c = chars[random];
+
+  charBox.innerHTML = `<img src="${c.img}">`;
+  nameText.innerText = c.name;
+  commentText.innerText = c.comment;
+
+  button.style.display = "block";
+}
+
+// 🔄 restart
+function restart() {
+  button.style.display = "none";
+  commentText.innerText = "";
+  nameText.innerText = "Analyzing again...";
+  charBox.innerHTML = "Scanning... 👀";
+  startScan();
+}
+</script>
+
+</body>
+</html>
